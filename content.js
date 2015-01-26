@@ -55,7 +55,7 @@ function disp(){
 				c.drawImage(engine.images[i],0+i*42,75,40,40);
 			}
 			
-			if(!globalBare.mouse.up){
+			if(globalBare.mouseUp){
 				engine.audio[0].play();
 			}
 			if(38 in globalBare.keys)
@@ -66,9 +66,13 @@ function disp(){
 				miku.x-=1;
 			if(39 in globalBare.keys)
 				miku.x+=1;
-			if(32 in globalBare.keys){
-				if(fcount%20==0)
-				leeks.push([miku.x+miku.w,miku.y+10]);
+			if(!globalBare.mouse.up){
+				if(fcount%20==0){
+					var ydiff=globalBare.mouse.y-(miku.y+miku.h/2);
+					var xdiff=globalBare.mouse.x-(miku.x+miku.w/2);
+					var rot=Math.atan2(ydiff,xdiff)*(180/Math.PI);
+					leeks.push([miku.x+miku.w/2,miku.y+miku.h/2,rot]);
+				}
 			}
 			if(77 in globalBare.keys)
 				audioMute();
@@ -94,12 +98,21 @@ function audioMute(){
 
 function drawLeeks(){
 	for(var i=0;i<leeks.length;i++){
-		c.drawImage(engine.images[4],leeks[i][0],leeks[i][1],30,30);
+		c.drawImage(engine.images[4],leeks[i][0],leeks[i][1],20,20);
 	}
 }
 
 function updateLeeks(){
 	for(var i=0;i<leeks.length;i++){
-		leeks[i][0]+=2;
+		var speed=2;
+		var rot=leeks[i][2];
+		var xvel=Math.cos(degToRads(rot))*speed;
+		var yvel=Math.sin(degToRads(rot))*speed;
+		leeks[i][0]+=xvel;
+		leeks[i][1]+=yvel;
 	}
+}
+
+function degToRads(degs){
+	return degs*Math.PI/180;
 }

@@ -104,11 +104,16 @@ function bareEngine(width,height){
 			this.audio[i].element.play();
 			this.audio[i].element.pause();
 		}
+		globalBare.audio=this.audio;
 	}
 
 	this.onAudioLoad=function(){
 		if((globalBare.imagesLoaded+globalBare.audioLoaded)<engine.totalImages+engine.totalAudio){
 			globalBare.audioLoaded++;
+			for(var i=0;i<globalBare.audio.length;i++){
+				globalBare.audio[i].element.play();
+				globalBare.audio[i].element.pause();
+			}
 			console.log("Audio Loaded");
 		}
 	}
