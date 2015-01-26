@@ -1,5 +1,5 @@
 var globalBare={
-	imagesLoaded:0,audioLoaded:0,mouse:{x:0,y:0,up:true,hover:-1,mouseUp:false},loaded:false
+	imagesLoaded:0,audioLoaded:0,mouse:{x:0,y:0,up:true,hover:-1,mouseUp:false},loaded:false,keys:new Object,lastKey:0
 }
 function bareEngine(width,height){
 	//Engine information
@@ -37,9 +37,11 @@ function bareEngine(width,height){
 		this.canvas.addEventListener('mouseup', this.mouseUp, false);
 		this.canvas.addEventListener('mousedown', this.mouseDown, false);
 		this.canvas.addEventListener('mousemove', this.mouseMove, false);
+		window.addEventListener("keydown", this.onKeyDown, false);
+		window.addEventListener("keyup", this.onKeyUp, false);
 		//Initializing the draw loop
-		if(typeof draw == "function")
-			this.displayLoop=window.requestAnimationFrame(draw);
+		if(typeof disp == "function")
+			this.displayLoop=window.requestAnimationFrame(disp);
 		else
 			this.error("No draw function found. Add a draw function if you want a game loop.");
 		//Loading assets
@@ -69,6 +71,13 @@ function bareEngine(width,height){
 			globalBare.mouse.y = e.layerY-box.top;
 		}
 	}
+	this.onKeyDown=function(e){
+		globalBare.keys[e.keyCode] = true;
+		globalBare.lastkey=e.keyCode;
+	}
+	this.onKeyUp=function(e){
+		delete globalBare.keys[e.keyCode];
+	}
 	//Media Loading
 	this.onImageLoad=function(){
 		globalBare.imagesLoaded++;
@@ -92,13 +101,15 @@ function bareEngine(width,height){
 			this.audio[i].element.src=this.audio[i].src;
 			this.audio[i].element.volume=this.defaultVolume;
 			this.audio[i].element.oncanplaythrough=this.onAudioLoad;
+			this.audio[i].element.play();
+			this.audio[i].element.pause();
 		}
 	}
 
 	this.onAudioLoad=function(){
 		if((globalBare.imagesLoaded+globalBare.audioLoaded)<engine.totalImages+engine.totalAudio){
 			globalBare.audioLoaded++;
-			console.log("Can play");
+			console.log("Audio Loaded");
 		}
 	}
 	//System functions
@@ -106,8 +117,8 @@ function bareEngine(width,height){
 		throw this.errorMessage+message;
 	}
 
-	this.rectCollision=function(mousex,mousey,mousew,mouseh,x,y,w,h){
-		return mousex+mousew > x && mousex < (x + w) && mousey+mouseh > y && mousey < (y + h);
+	this.rectCollision=function(rect1x, rect1y, rect1w, rect1h, rect2x, rect2y, rect2w, rect2h){
+		return rect1x+rect1w > rect2x && rect1x < (rect2x + rect2w) && rect1y+rect1h > rect2y && rect1y < (rect2y + rect2h);
 	}
 	this.mouseManager=function(){
 		if(!this.lastMouseUp && globalBare.mouse.up){
