@@ -26,14 +26,14 @@ function disp(){
 	engine.mouseManager();
 	switch(engine.currentScene){
 		case -1:
-			if(globalBare.imagesLoaded+globalBare.audioLoaded>=engine.totalImages+engine.totalAudio)
+			if(engine.imagesLoaded()+engine.audioLoaded()>=engine.totalImages+engine.totalAudio)
 				engine.currentScene=0;
 			c.fillStyle="grey";
 			c.fillRect(10,50,100,40);
 			c.fillStyle="red";
-			c.fillRect(10,50,100*((globalBare.imagesLoaded+globalBare.audioLoaded)/(engine.totalImages+engine.totalAudio)),40);
+			c.fillRect(10,50,100*((engine.imagesLoaded()+engine.audioLoaded())/(engine.totalImages+engine.totalAudio)),40);
 			c.fillStyle="black";
-			c.fillText((globalBare.imagesLoaded+globalBare.audioLoaded)+"/"+(engine.totalImages+engine.totalAudio)+" Assets Loaded",15,60);
+			c.fillText((engine.imagesLoaded()+engine.audioLoaded())+"/"+(engine.totalImages+engine.totalAudio)+" Assets Loaded",15,60);
 		break;
 		case 0:
 			c.clearRect(0,0,engine.width,engine.height);
@@ -41,7 +41,7 @@ function disp(){
 			c.fillRect(10,10,10,10);
 			c.fillStyle="black";
 			c.fillText("< Click here for music",22,18);
-			if(engine.rectCollision(globalBare.mouse.x,globalBare.mouse.y,1,1,10,10,10,10) && globalBare.mouseUp){
+			if(engine.rectCollision(engine.mouse.x,engine.mouse.y,1,1,10,10,10,10) && engine.mouse.mouseUp){
 				if(engine.audio[1].element.paused)
 					engine.audio[1].play();
 				else
@@ -55,28 +55,28 @@ function disp(){
 				c.drawImage(engine.images[i],0+i*42,75,40,40);
 			}
 			
-			if(globalBare.mouseUp){
+			if(engine.mouse.mouseUp){
 				engine.audio[0].play();
 			}
-			if(38 in globalBare.keys)
+			if(38 in engine.keys)
 				miku.y-=1;
-			if(40 in globalBare.keys)
+			if(40 in engine.keys)
 				miku.y+=1;
-			if(37 in globalBare.keys)
+			if(37 in engine.keys)
 				miku.x-=1;
-			if(39 in globalBare.keys)
+			if(39 in engine.keys)
 				miku.x+=1;
-			if(!globalBare.mouse.up){
+			if(!engine.mouse.up){
 				if(fcount%20==0){
-					var ydiff=globalBare.mouse.y-(miku.y+miku.h/2);
-					var xdiff=globalBare.mouse.x-(miku.x+miku.w/2);
+					var ydiff=engine.mouse.y-(miku.y+miku.h/2);
+					var xdiff=engine.mouse.x-(miku.x+miku.w/2);
 					var rot=Math.atan2(ydiff,xdiff)*(180/Math.PI);
 					leeks.push([miku.x+miku.w/2,miku.y+miku.h/2,rot]);
 				}
 			}
-			if(77 in globalBare.keys)
+			if(77 in engine.keys)
 				audioMute();
-			if(engine.rectCollision(globalBare.mouse.x,globalBare.mouse.y,1,1,miku.x,miku.y,miku.w,miku.h) && globalBare.mouseUp){
+			if(engine.rectCollision(engine.mouse.x,engine.mouse.y,1,1,miku.x,miku.y,miku.w,miku.h) && engine.mouse.mouseUp){
 				if(engine.audio[2].element.paused)
 					engine.audio[2].play();
 				else

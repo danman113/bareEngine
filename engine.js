@@ -1,5 +1,5 @@
 var globalBare={
-	imagesLoaded:0,audioLoaded:0,mouse:{x:0,y:0,up:true,hover:-1,mouseUp:false},loaded:false,keys:new Object,lastKey:0
+	imagesLoaded:0,audioLoaded:0,mouse:{x:0,y:0,up:true,hover:-1,mouseUp:false},keys:new Object,lastKey:0
 }
 function bareEngine(width,height){
 	//Engine information
@@ -20,12 +20,16 @@ function bareEngine(width,height){
 	this.audioUrls=[];
 	this.totalImages=this.images.length;
 	this.totalAudio=this.audio.length;
+	//IO
+	this.keys=globalBare.keys;
+	this.mouse=globalBare.mouse;
+	this.lastMouseUp=true;
 	//Scene
 	this.currentScene=-1;
 	this.scenes=[];
-	this.loaded=false;
+	//Misc
 	this.errorMessage="bareEngine error: ";
-	this.lastMouseUp=true;
+
 	this.init=function(target){
 		//Creating the canvas
 		this.target=target;
@@ -50,17 +54,20 @@ function bareEngine(width,height){
 		this.loadImages();
 		this.loadAudio();
 	}
+
 	//Input
 	this.mouseUp=function(e){
 		globalBare.mouse.up=true;
 		if(typeof globalBare.onMouseUp=="function")
 			globalBare.onMouseUp();
 	}
+
 	this.mouseDown=function(e){
 		globalBare.mouse.up=false;
 		if(typeof globalBare.onMouseDown=="function")
 			globalBare.onMouseDown();
 	}
+
 	this.mouseMove=function(e){
 		if(e.offsetX) {
 			globalBare.mouse.x = e.offsetX;
@@ -71,13 +78,16 @@ function bareEngine(width,height){
 			globalBare.mouse.y = e.layerY-box.top;
 		}
 	}
+
 	this.onKeyDown=function(e){
 		globalBare.keys[e.keyCode] = true;
 		globalBare.lastkey=e.keyCode;
 	}
+
 	this.onKeyUp=function(e){
 		delete globalBare.keys[e.keyCode];
 	}
+
 	//Media Loading
 	this.onImageLoad=function(){
 		globalBare.imagesLoaded++;
@@ -117,6 +127,15 @@ function bareEngine(width,height){
 			console.log("Audio Loaded");
 		}
 	}
+
+	this.audioLoaded=function(){
+		return globalBare.audioLoaded;
+	}
+
+	this.imagesLoaded=function(){
+		return globalBare.imagesLoaded;
+	}
+
 	//System functions
 	this.error=function(message){
 		throw this.errorMessage+message;
@@ -125,11 +144,12 @@ function bareEngine(width,height){
 	this.rectCollision=function(rect1x, rect1y, rect1w, rect1h, rect2x, rect2y, rect2w, rect2h){
 		return rect1x+rect1w > rect2x && rect1x < (rect2x + rect2w) && rect1y+rect1h > rect2y && rect1y < (rect2y + rect2h);
 	}
+
 	this.mouseManager=function(){
 		if(!this.lastMouseUp && globalBare.mouse.up){
-			globalBare.mouseUp=true;
+			globalBare.mouse.mouseUp=true;
 		} else {
-			globalBare.mouseUp=false;
+			globalBare.mouse.mouseUp=false;
 		}
 		this.lastMouseUp=globalBare.mouse.up;
 	}
