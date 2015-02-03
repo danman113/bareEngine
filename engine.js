@@ -1,11 +1,14 @@
 var globalBare={
-	imagesLoaded:0,audioLoaded:0,mouse:{x:0,y:0,up:true,hover:-1,mouseUp:false},keys:new Object,lastKey:0
+	imagesLoaded:0,audioLoaded:0,mouse:{x:0,y:0,up:true,hover:-1,mouseUp:false,mouseDown:false},keys:new Object,lastKey:0
 }
 function bareEngine(width,height){
 	//Engine information
 	this.version=0.2;
 	//Options
-	this.defaultVolume=0.5;
+	this.masterVolume=0.5;
+	this.soundVolume=1;
+	this.musicVolume=1;
+	
 	//Canvas
 	this.width=width;
 	this.height=height;
@@ -109,7 +112,7 @@ function bareEngine(width,height){
 			this.audio.push(new audioFile(this.audioUrls[i]));
 			this.audio[i].element=document.createElement('audio');
 			this.audio[i].element.src=this.audio[i].src;
-			this.audio[i].element.volume=this.defaultVolume;
+			this.audio[i].element.volume=this.masterVolume;
 			this.audio[i].element.oncanplaythrough=this.onAudioLoad;
 			this.audio[i].element.play();
 			this.audio[i].element.pause();
@@ -136,6 +139,52 @@ function bareEngine(width,height){
 		return globalBare.imagesLoaded;
 	}
 
+	//Audio Control
+	this.defaultMusicVolume=function(){
+		return (this.masterVolume*this.musicVolume);
+	}
+
+	this.defaultSoundVolume=function(){
+		return (this.masterVolume*this.soundVolume);
+	}
+
+	this.setMusicVolume=function(x){
+		this.musicVolume=x;
+		for(var i=0;i<this.audio.length;i++){
+			if(!this.audio[i].element.paused){
+				this.audio[i].element.volume=this.musicVolume;
+			}
+		}
+	}
+
+	this.setSoundVolume=function(x){
+		this.soundVolume=x;
+	}
+
+	//Scene stuff
+	this.updateSceneInfo=function(engine){
+		for(var i=0;i<this.scenes.length;i++){
+			this.scenes[i].engine=engine;
+			this.scenes[i].updateButtons();
+		}
+	}
+	this.drawButtons=function(){
+		if(this.hasScene(this.currentScene)){
+			this.scenes[this.currentScene].drawButtons(this.mouse.x,this.mouse.y,1,1);
+		}
+	}
+	this.handleClicks=function(clickConditon){
+		if(this.hasScene(this.currentScene)){
+			this.scenes[this.currentScene].handleClicks(this.mouse.x,this.mouse.y,1,1,clickConditon);
+		}
+	}
+	this.hasScene=function(sceneNo){
+		for(var i=0;i<this.scenes.length;i++){
+			if(this.scenes[i].number==sceneNo)
+				return true;
+		}
+		return false;
+	}
 	//System functions
 	this.error=function(message){
 		throw this.errorMessage+message;
@@ -150,6 +199,11 @@ function bareEngine(width,height){
 			globalBare.mouse.mouseUp=true;
 		} else {
 			globalBare.mouse.mouseUp=false;
+		}
+		if(this.lastMouseUp && !globalBare.mouse.up){
+			globalBare.mouse.mouseDown=true;
+		} else {
+			globalBare.mouse.mouseDown=false;
 		}
 		this.lastMouseUp=globalBare.mouse.up;
 	}
@@ -167,4 +221,74 @@ function audioFile(src,defaultVolume){
 		this.element.pause();
 		this.element.currentTime = 0;
 	}
+}
+
+function rectButton(x,y,width,height,onClick,drawFunction,onHover){
+	this.x=x;
+	this.y=y;
+	this.width=width;
+	this.height=height;
+	this.buttonColors=["#2E9AFE","#084B8A"];
+	this.engine;
+	if(drawFunction===undefined || drawFunction===null){
+		drawFunction=function(){
+			this.engine.context.fillStyle=this.buttonColors[0];
+			this.engine.context.fillRect(this.x,this.y,this.width,this.height);
+			this.engine.context.fillStyle=this.buttonColors[1];
+			this.engine.context.fillRect(this.x,this.y+this.height-this.height/5,this.width,this.height/5);	
+		}
+	}
+	this.drawFunction=drawFunction;
+	if(onHover===undefined || onHover===null){
+		onHover=function(){
+			this.engine.context.fillStyle=this.buttonColors[1];
+			this.engine.context.fillRect(this.x,this.y,this.width,this.height);
+		}
+	}
+	this.onHover=onHover;
+	if(onClick===undefined || onClick===null){
+		onClick=function(){
+			console.log("Button Clicked");
+		}
+	}
+	this.onClick=onClick;
+
+
+	this.drawButton=function(x,y,w,h){
+		if(x+w > this.x && x < (this.x + this.width) && y+h > this.y && y < (this.y + this.height)){
+			this.onHover();
+		} else {
+			this.drawFunction();
+		}
+	}
+
+
+	
+
+}
+
+function bareScene(sceneNumber,buttons){
+	this.number=sceneNumber;
+	this.engine;
+	this.buttons=buttons;
+	this.updateButtons=function(){
+		for(var i=0;i<this.buttons.length;i++){
+			this.buttons[i].engine=this.engine;
+		}
+	}
+	this.drawButtons=function(x,y,w,h){
+		for(var i=0;i<this.buttons.length;i++){
+			this.buttons[i].drawButton(x,y,w,h);
+		}
+	}
+
+	this.handleClicks=function(x,y,w,h,Clicked){
+		for(var i=this.buttons.length-1;i>-1;i--){
+			if(x+w > this.buttons[i].x && x < (this.buttons[i].x + this.buttons[i].width) && y+h > this.buttons[i].y && y < (this.buttons[i].y + this.buttons[i].height) && Clicked){
+				engine.scenes[0].buttons[i].onClick();
+				return true;
+			}
+		}	
+	}
+
 }
