@@ -4,11 +4,22 @@ Loading Music, images, and files seamlessly
 Good input handling
 Collision
 Working music system
+Button Engine
 */
 
 var engine=new bareEngine(400,300);
-engine.imageUrls=["http://danman113.vacau.com/4041.jpg","http://danman113.vacau.com/4042.jpg","http://danman113.vacau.com/4040.jpg","http://i.imgur.com/0owH9N2.png","http://www.mrsmacs.com.au/assets/main_ingredients/leek-af4d6dbef3b91aa7024c6b9215d768b9.png"]
-engine.audioUrls=["http://neveronti.me/Rogue_Psycho/pickup.mp3","http://neveronti.me/Assault_Fury/Necro.mp3","miku.mp3"];
+engine.imageUrls=["http://danman113.vacau.com/4041.jpg",
+				"http://danman113.vacau.com/4042.jpg",
+				"http://danman113.vacau.com/4040.jpg",
+				"http://fc08.deviantart.net/fs71/f/2010/017/a/d/Hatsune_Miku_Icon_by_KagamineStar.gif",
+				"http://www.mrsmacs.com.au/assets/main_ingredients/leek-af4d6dbef3b91aa7024c6b9215d768b9.png"
+				];
+
+engine.audioUrls=["http://neveronti.me/Rogue_Psycho/click.mp3",
+					"http://neveronti.me/HS15/modal.mp3",
+					"http://neveronti.me/HS15/miku.mp3"
+					];
+
 engine.masterVolume=.25;
 var c;
 var fcount=0;
@@ -19,17 +30,42 @@ var leeks=[];
 function init(){
 	engine.init(document.body);
 	c=engine.context;
-	engine.scenes=[new bareScene(0,[new rectButton(20,20,40,20,function(){
+	canvas.style.border="1px solid black"
+	engine.scenes=[new bareScene(0,[new rectButton(20,20,50,40,function(){
 				if(engine.audio[1].element.paused){
 					engine.audio[1].play(engine.defaultMusicVolume());
 					engine.scenes[0].buttons[0].buttonColors=["red","darkred"];
 				} else{
 					engine.audio[1].stop();
 					engine.scenes[0].buttons[0].buttonColors=["#2E9AFE","#084B8A"];
-				}})
-				,new rectButton(200,20,40,20)])];
+				}},String.fromCharCode(parseInt("266A",16)))
+								,new rectButton(200,20,120,100,function(){engine.goto(1);},String.fromCharCode(parseInt("262F",16)))])
+
+				,new bareScene(1,[new rectButton((engine.width-200)/2,50,200,60,null,"Play Game"),
+								new rectButton((engine.width-200)/2,150,200,60,function(){engine.goto(2);},"Options")
+								],0)
+
+				, new bareScene(2,[new rectButton((engine.width-200)/2,20,200,60,function(){engine.masterVolume=(engine.mouse.x-this.x)/this.width;engine.masterVolume>.94?engine.masterVolume=1:engine.masterVolume=engine.masterVolume;},"Volume",function(){bar(this.x,this.y,this.width,this.height,engine.masterVolume,1);},function(){bar(this.x,this.y,this.width,this.height,engine.masterVolume,1);c.fillStyle="white",c.fillRect(this.x+this.width*engine.masterVolume-2,this.y,4,this.height)})
+								,new rectButton((engine.width-200)/2,100,200,60,function(){engine.musicVolume=(engine.mouse.x-this.x)/this.width;engine.musicVolume>.94?engine.musicVolume=1:engine.musicVolume=engine.musicVolume;},"Volume",function(){bar(this.x,this.y,this.width,this.height,engine.musicVolume,1);},function(){bar(this.x,this.y,this.width,this.height,engine.musicVolume,1);c.fillStyle="white",c.fillRect(this.x+this.width*engine.musicVolume-2,this.y,4,this.height)})
+								,new rectButton((engine.width-200)/2,180,200,60,function(){engine.soundVolume=(engine.mouse.x-this.x)/this.width;engine.soundVolume>.94?engine.soundVolume=1:engine.soundVolume=engine.soundVolume;},"Volume",function(){bar(this.x,this.y,this.width,this.height,engine.soundVolume,1);},function(){bar(this.x,this.y,this.width,this.height,engine.soundVolume,1);c.fillStyle="white",c.fillRect(this.x+this.width*engine.soundVolume-2,this.y,4,this.height)})
+								,new rectButton((engine.width-200)/2+50,250,100,40,function(){engine.goto(1);},"Back")
+
+									],1)
+				];
 	engine.updateSceneInfo(engine);
 }
+
+function bar(x,y,w,h,u1,u2,color,bgcolor){
+	if(color==undefined)
+		color='red';
+	if(bgcolor==undefined)
+		bgcolor='grey'
+	c.fillStyle=bgcolor;
+	c.fillRect(x,y,w,h);
+	c.fillStyle=color;
+	c.fillRect(x,y,w*(u1/u2),h);
+}
+
 function disp(){
 	update();
 	draw();
@@ -57,12 +93,33 @@ function draw(){
 			for(var i=0;i<engine.images.length;i++){
 				c.drawImage(engine.images[i],0+i*42,75,40,40);
 			}
+
 			engine.drawButtons();
+			
+			//c.fillRect(miku.x,miku.y,miku.w,miku.h);
+			
 			c.drawImage(engine.images[3],miku.x,miku.y,miku.w,miku.h);
+			
 			drawLeeks();
 			
 		break;
+		case 1:
+			c.clearRect(0,0,engine.width,engine.height);
+			engine.drawButtons();
+		break;
+		case 2:
+			c.clearRect(0,0,engine.width,engine.height);
+			c.fillStyle="black";
+			c.font=(engine.fontsize*1.2)+"px "+engine.font;
+			c.fillText("Master Volume",10,55);
+			c.fillText("Music Volume",10,135);
+			c.fillText("Sound Volume",10,215);
+			engine.drawButtons();
+		break;
 	}
+}
+function hi(){
+	console.log(this.label);
 }
 function update(){
 	engine.mouseManager();
@@ -99,9 +156,20 @@ function update(){
 				engine.audio[2].play(engine.defaultMusicVolume());
 			else
 				engine.audio[2].stop();
-		}		
+		}
 		updateLeeks();
 		engine.handleClicks(engine.mouse.mouseUp);
+	break;
+	case 1:
+		engine.handleClicks(engine.mouse.mouseUp);
+		if(engine.mouse.mouseUp)
+			engine.audio[0].play(engine.defaultSoundVolume());
+	break;
+	case 2:
+		engine.handleClicks(!engine.mouse.up);
+		if(engine.mouse.mouseUp)
+			engine.audio[0].play(engine.defaultSoundVolume());
+
 	break;
 	}
 }
@@ -134,9 +202,9 @@ function degToRads(degs){
 
 function soundDist(x,y,distance,dampener){
 	if(distance===undefined)
-		distance=500;
+		distance=400;
 	if(dampener===undefined)
-		dampener=(1/20);
+		dampener=(1/10);
 	var dist=1-Math.abs(Math.sqrt((x-miku.x)*(x-miku.x)+(y-miku.y)*(y-miku.y))/distance);
 	dist*=dampener;
 	if(dist<0)

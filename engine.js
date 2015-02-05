@@ -1,14 +1,20 @@
+/*
+Todo:
+Touch emulation
+*/
+
 var globalBare={
 	imagesLoaded:0,audioLoaded:0,mouse:{x:0,y:0,up:true,hover:-1,mouseUp:false,mouseDown:false},keys:new Object,lastKey:0
 }
 function bareEngine(width,height){
 	//Engine information
-	this.version=0.2;
+	this.version=0.75;
 	//Options
 	this.masterVolume=0.5;
 	this.soundVolume=1;
 	this.musicVolume=1;
-	
+	this.fontsize=10;
+	this.font="arial";
 	//Canvas
 	this.width=width;
 	this.height=height;
@@ -44,6 +50,8 @@ function bareEngine(width,height){
 		this.canvas.addEventListener('mouseup', this.mouseUp, false);
 		this.canvas.addEventListener('mousedown', this.mouseDown, false);
 		this.canvas.addEventListener('mousemove', this.mouseMove, false);
+		this.canvas.addEventListener('mouseout', this.mouseOut, false);
+		
 		window.addEventListener("keydown", this.onKeyDown, false);
 		window.addEventListener("keyup", this.onKeyUp, false);
 		//Initializing the draw loop
@@ -63,6 +71,7 @@ function bareEngine(width,height){
 		globalBare.mouse.up=true;
 		if(typeof globalBare.onMouseUp=="function")
 			globalBare.onMouseUp();
+		this.keys=new Object;
 	}
 
 	this.mouseDown=function(e){
@@ -80,6 +89,10 @@ function bareEngine(width,height){
 			globalBare.mouse.x = e.layerX-box.left;
 			globalBare.mouse.y = e.layerY-box.top;
 		}
+	}
+
+	this.mouseOut=function(e){
+		globalBare.mouse.up=true;
 	}
 
 	this.onKeyDown=function(e){
@@ -169,22 +182,35 @@ function bareEngine(width,height){
 		}
 	}
 	this.drawButtons=function(){
-		if(this.hasScene(this.currentScene)){
+		if(this.hasScene(this.currentScene)>=0){
 			this.scenes[this.currentScene].drawButtons(this.mouse.x,this.mouse.y,1,1);
 		}
 	}
 	this.handleClicks=function(clickConditon){
-		if(this.hasScene(this.currentScene)){
+		if(this.hasScene(this.currentScene)>=0){
 			this.scenes[this.currentScene].handleClicks(this.mouse.x,this.mouse.y,1,1,clickConditon);
 		}
 	}
 	this.hasScene=function(sceneNo){
 		for(var i=0;i<this.scenes.length;i++){
 			if(this.scenes[i].number==sceneNo)
-				return true;
+				return i;
 		}
-		return false;
+		return -1;
 	}
+
+	this.back=function(){
+		if(this.hasScene(engine.currentScene)>=0){
+			engine.currentScene=this.scenes[this.hasScene(engine.currentScene)].parent;
+		}
+	}
+
+	this.goto=function(sceneNo){
+		if(this.hasScene(sceneNo)>=0){
+			engine.currentScene=this.hasScene(sceneNo);
+		}
+	}
+
 	//System functions
 	this.error=function(message){
 		throw this.errorMessage+message;
@@ -223,12 +249,13 @@ function audioFile(src,defaultVolume){
 	}
 }
 
-function rectButton(x,y,width,height,onClick,drawFunction,onHover){
+function rectButton(x,y,width,height,onClick,label,drawFunction,onHover){
 	this.x=x;
 	this.y=y;
 	this.width=width;
 	this.height=height;
-	this.buttonColors=["#2E9AFE","#084B8A"];
+	this.label=label;
+	this.buttonColors=["#2E9AFE","#084B8A","white","black"];
 	this.engine;
 	if(drawFunction===undefined || drawFunction===null){
 		drawFunction=function(){
@@ -236,6 +263,14 @@ function rectButton(x,y,width,height,onClick,drawFunction,onHover){
 			this.engine.context.fillRect(this.x,this.y,this.width,this.height);
 			this.engine.context.fillStyle=this.buttonColors[1];
 			this.engine.context.fillRect(this.x,this.y+this.height-this.height/5,this.width,this.height/5);	
+			if(!(this.label===undefined)){
+				this.buttonColors[2]===undefined?this.buttonColors[2]="white":this.buttonColors[2]=this.buttonColors[2];
+				this.buttonColors[3]===undefined?this.buttonColors[3]="black":this.buttonColors[3]=this.buttonColors[3];
+				this.engine.context.fillStyle=this.buttonColors[2];
+				this.engine.context.font=this.height/2+"px "+this.engine.font;
+				this.engine.context.fillText(this.label,this.x+(this.width-this.engine.context.measureText(this.label).width)/2,this.y+(this.height*2/3));	
+				this.engine.context.font=this.engine.fontsize+"px "+this.engine.font;
+			}
 		}
 	}
 	this.drawFunction=drawFunction;
@@ -243,6 +278,16 @@ function rectButton(x,y,width,height,onClick,drawFunction,onHover){
 		onHover=function(){
 			this.engine.context.fillStyle=this.buttonColors[1];
 			this.engine.context.fillRect(this.x,this.y,this.width,this.height);
+			if(!(this.label===undefined)){
+				this.buttonColors[2]===undefined?this.buttonColors[2]="white":this.buttonColors[2]=this.buttonColors[2];
+				this.buttonColors[3]===undefined?this.buttonColors[3]="black":this.buttonColors[3]=this.buttonColors[3];
+				this.engine.context.fillStyle=this.buttonColors[3];
+				this.engine.context.font=this.height/2+"px "+this.engine.font;
+				this.engine.context.fillText(this.label,this.x+2+(this.width-this.engine.context.measureText(this.label).width)/2,this.y+2+(this.height*2/3));	
+				this.engine.context.fillStyle=this.buttonColors[2];
+				this.engine.context.fillText(this.label,this.x+(this.width-this.engine.context.measureText(this.label).width)/2,this.y+(this.height*2/3));	
+				this.engine.context.font=this.engine.fontsize+"px "+this.engine.font;
+			}
 		}
 	}
 	this.onHover=onHover;
@@ -261,16 +306,15 @@ function rectButton(x,y,width,height,onClick,drawFunction,onHover){
 			this.drawFunction();
 		}
 	}
-
-
-	
-
 }
 
-function bareScene(sceneNumber,buttons){
+function bareScene(sceneNumber,buttons,parent){
 	this.number=sceneNumber;
 	this.engine;
 	this.buttons=buttons;
+	if(parent===undefined || parent===null)
+		parent=sceneNumber;
+	this.parent=parent;
 	this.updateButtons=function(){
 		for(var i=0;i<this.buttons.length;i++){
 			this.buttons[i].engine=this.engine;
@@ -285,10 +329,9 @@ function bareScene(sceneNumber,buttons){
 	this.handleClicks=function(x,y,w,h,Clicked){
 		for(var i=this.buttons.length-1;i>-1;i--){
 			if(x+w > this.buttons[i].x && x < (this.buttons[i].x + this.buttons[i].width) && y+h > this.buttons[i].y && y < (this.buttons[i].y + this.buttons[i].height) && Clicked){
-				engine.scenes[0].buttons[i].onClick();
+				engine.scenes[engine.currentScene].buttons[i].onClick();
 				return true;
 			}
 		}	
 	}
-
 }
