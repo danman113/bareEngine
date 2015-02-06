@@ -33,6 +33,7 @@ function bareEngine(width,height){
 	this.keys=globalBare.keys;
 	this.mouse=globalBare.mouse;
 	this.lastMouseUp=true;
+	this.keybindings=[];
 	//Scene
 	this.currentScene=-1;
 	this.scenes=[];
@@ -103,6 +104,27 @@ function bareEngine(width,height){
 	this.onKeyUp=function(e){
 		delete globalBare.keys[e.keyCode];
 	}
+
+	this.findKey=function(label){
+		for(var i=0;i<this.keybindings.length;i++){
+			if(this.keybindings[i].label==label)
+				return i;
+		}
+		return -1;
+	}
+
+	this.rebind=function(label,primary,secondary){
+		var k=this.findKey(label);
+		if(k>=0){
+			if(primary===undefined || primary===null)
+				primary=this.keybindings[k].primary;
+			if(secondary===undefined || secondary===null)
+				secondary=this.keybindings[k].secondary;
+			this.keybindings[k].primary=primary;
+			this.keybindings[k].secondary=secondary;
+		} 
+	}
+
 
 	//Media Loading
 	this.onImageLoad=function(){
@@ -334,4 +356,10 @@ function bareScene(sceneNumber,buttons,parent){
 			}
 		}	
 	}
+}
+
+function bareKey(label,primary,secondary){
+	this.label=label;
+	this.primary=primary;
+	this.secondary=secondary;
 }
