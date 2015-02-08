@@ -8,13 +8,14 @@ var globalBare={
 }
 function bareEngine(width,height){
 	//Engine information
-	this.version=0.75;
+	this.version=0.8;
 	//Options
 	this.masterVolume=0.5;
 	this.soundVolume=1;
 	this.musicVolume=1;
 	this.fontsize=10;
 	this.font="arial";
+	this.rightClick=false;
 	//Canvas
 	this.width=width;
 	this.height=height;
@@ -52,7 +53,8 @@ function bareEngine(width,height){
 		this.canvas.addEventListener('mousedown', this.mouseDown, false);
 		this.canvas.addEventListener('mousemove', this.mouseMove, false);
 		this.canvas.addEventListener('mouseout', this.mouseOut, false);
-		
+		if(!this.rightClick)
+			document.addEventListener('contextmenu', this.onRightClick, false);
 		window.addEventListener("keydown", this.onKeyDown, false);
 		window.addEventListener("keyup", this.onKeyUp, false);
 		//Initializing the draw loop
@@ -70,15 +72,22 @@ function bareEngine(width,height){
 	//Input
 	this.mouseUp=function(e){
 		globalBare.mouse.up=true;
-		if(typeof globalBare.onMouseUp=="function")
-			globalBare.onMouseUp();
+		if(typeof onMouseUp=="function")
+			onMouseUp();
 		this.keys=new Object;
 	}
 
 	this.mouseDown=function(e){
 		globalBare.mouse.up=false;
-		if(typeof globalBare.onMouseDown=="function")
-			globalBare.onMouseDown();
+		if(typeof onMouseDown=="function")
+			onMouseDown();
+
+	}
+
+	this.onRightClick=function(e){
+		if(typeof onRightClick=="function")
+			onRightClick();
+		e.preventDefault();
 	}
 
 	this.mouseMove=function(e){

@@ -41,7 +41,7 @@ function init(){
 				}},String.fromCharCode(parseInt("266A",16)))
 								,new rectButton(200,20,120,100,function(){engine.goto(1);},String.fromCharCode(parseInt("262F",16)))])
 
-				,new bareScene(1,[new rectButton((engine.width-200)/2,50,200,60,null,"Play Game"),
+				,new bareScene(1,[new rectButton((engine.width-200)/2,50,200,60,function(){engine.goto(0)},"Play Game"),
 								new rectButton((engine.width-200)/2,150,200,60,function(){engine.goto(2);},"Options")
 								],0)
 
