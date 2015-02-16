@@ -1,6 +1,7 @@
 /*
 Todo:
 Touch emulation
+Better onkeyup stuff
 */
 
 var globalBare={
@@ -74,7 +75,7 @@ function bareEngine(width,height){
 		globalBare.mouse.up=true;
 		if(typeof onMouseUp=="function")
 			onMouseUp();
-		this.keys=new Object;
+		this.keys=new Object();
 	}
 
 	this.mouseDown=function(e){
@@ -103,14 +104,20 @@ function bareEngine(width,height){
 
 	this.mouseOut=function(e){
 		globalBare.mouse.up=true;
+		if(typeof onMouseOut=="function")
+			onMouseOut();
 	}
 
 	this.onKeyDown=function(e){
 		globalBare.keys[e.keyCode] = true;
 		globalBare.lastkey=e.keyCode;
+		if(typeof onKeyDown=="function")
+			onKeyDown(e);
 	}
 
 	this.onKeyUp=function(e){
+		if(typeof onKeyUp=="function")
+			onKeyUp(e);
 		delete globalBare.keys[e.keyCode];
 	}
 
@@ -129,6 +136,12 @@ function bareEngine(width,height){
 				primary=this.keybindings[k].primary;
 			if(secondary===undefined || secondary===null)
 				secondary=this.keybindings[k].secondary;
+			for(var i=0;i<this.keybindings.length;i++){
+				if(i!=k && this.keybindings[i].primary==primary)
+					this.keybindings[i].primary=this.keybindings[k].primary;
+				if(i!=k && this.keybindings[i].secondary==secondary)
+					this.keybindings[i].secondary=this.keybindings[k].secondary;
+			}
 			this.keybindings[k].primary=primary;
 			this.keybindings[k].secondary=secondary;
 		} 
@@ -269,10 +282,30 @@ function bareEngine(width,height){
 function audioFile(src,defaultVolume){
 	this.src=src;
 	this.element;
-	this.play=function(volume){
+	this.child;
+	this.play=function(volume,multiple){
 		if(volume!==undefined && this.element.volume!=volume)
 			this.element.volume=volume;
-		this.element.play();
+		if(multiple===undefined || multiple===null)
+			multiple=false;
+		if(multiple){
+			if(this.element.paused)
+				this.element.play();
+			else{
+				if(this.child===undefined){
+					this.child=new audioFile(this.src);
+					this.child.element=document.createElement('audio');
+					this.child.element.src=this.child.src;
+					this.child.element.volume=this.element.volume;
+					console.log("Created new audio element " + this.src);
+				}
+				this.child.play(this.element.volume,multiple);
+			}
+		} else {
+			this.element.play();
+		}
+		
+		
 	}
 	this.stop=function(){
 		this.element.pause();

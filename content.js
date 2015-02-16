@@ -6,7 +6,6 @@ Collision
 Working music system
 Button Engine
 */
-
 var engine=new bareEngine(400,300);
 engine.imageUrls=["http://danman113.vacau.com/4041.jpg",
 				"http://danman113.vacau.com/4042.jpg",
