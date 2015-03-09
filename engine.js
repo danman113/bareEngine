@@ -50,6 +50,7 @@ function bareEngine(width,height){
 		this.context=canvas.getContext("2d");
 		globalBare.canvas=this.canvas;
 		//Input handling
+		globalBare.keybindings=this.keybindings;
 		this.canvas.addEventListener('mouseup', this.mouseUp, false);
 		this.canvas.addEventListener('mousedown', this.mouseDown, false);
 		this.canvas.addEventListener('mousemove', this.mouseMove, false);
@@ -58,6 +59,7 @@ function bareEngine(width,height){
 			document.addEventListener('contextmenu', this.onRightClick, false);
 		window.addEventListener("keydown", this.onKeyDown, false);
 		window.addEventListener("keyup", this.onKeyUp, false);
+		window.addEventListener("keydown", this.prevent, false);
 		//Initializing the draw loop
 		if(typeof disp == "function")
 			this.displayLoop=window.requestAnimationFrame(disp);
@@ -113,6 +115,16 @@ function bareEngine(width,height){
 		globalBare.lastkey=e.keyCode;
 		if(typeof onKeyDown=="function")
 			onKeyDown(e);
+	}
+	this.prevent=function(e){
+		var keys=[];
+		for(var i=0;i<globalBare.keybindings.length;i++){
+			keys.push(globalBare.keybindings[i].primary);
+			keys.push(globalBare.keybindings[i].secondary);
+		}
+		if(keys.indexOf(e.keyCode) > -1) {
+			e.preventDefault();
+		}
 	}
 
 	this.onKeyUp=function(e){
@@ -309,7 +321,11 @@ function audioFile(src,defaultVolume){
 	}
 	this.stop=function(){
 		this.element.pause();
+		try{
 		this.element.currentTime = 0;
+		} catch(e){
+			console.log(e);
+		}
 	}
 }
 
