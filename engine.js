@@ -39,6 +39,7 @@ function bareEngine(width,height){
 	//Scene
 	this.currentScene=-1;
 	this.scenes=[];
+	this.scrollbars=[];
 	//Misc
 	this.errorMessage="bareEngine error: ";
 
@@ -158,7 +159,9 @@ function bareEngine(width,height){
 			this.keybindings[k].secondary=secondary;
 		} 
 	}
-
+	this.addScrollbar=function(top,maxHeight,screenHeight,sideways){
+		this.scrollbars.push(new bareScrollbar(top,maxHeight,screenHeight,sideways,this.context));
+	}
 
 	//Media Loading
 	this.onImageLoad=function(){
@@ -269,7 +272,7 @@ function bareEngine(width,height){
 
 	//System functions
 	this.error=function(message){
-		throw this.errorMessage+message;
+		console.error(this.errorMessage+message);
 	}
 
 	this.rectCollision=function(rect1x, rect1y, rect1w, rect1h, rect2x, rect2y, rect2w, rect2h){
@@ -420,4 +423,125 @@ function bareKey(label,primary,secondary){
 	this.label=label;
 	this.primary=primary;
 	this.secondary=secondary;
+}
+
+
+function bareScrollbar(top,maxHeight,screenHeight,sideways,context2D){
+	this.top=top;
+	this.maxHeight=maxHeight;
+	this.screenHeight=screenHeight;
+	this.scrollbarHeight=this.screenHeight/this.maxHeight;
+	this.scrollbarOffset=this.top/this.maxHeight;
+	//Draggable scrollbar information
+	this.lastX=-1;
+	this.lastY=-1;
+	this.lastTop=top;
+	this.dragging=false;
+	if(sideways===undefined || sideways===null)
+		sideways=false
+	if(context2D===undefined || context2D===null){
+		if(typeof c =="object"){
+			if(c.canvas!==undefined && c.canvas!==null)
+			context2D=c;	
+		}
+		if((context2D===undefined || context2D===null) && typeof ctx =="object"){
+			if(ctx.canvas!==undefined && ctx.canvas!==null)
+			context2D=ctx;	
+		}
+		if((context2D===undefined || context2D===null) && typeof context =="object"){
+			if(context.canvas!==undefined && context.canvas!==null)
+			context2D=context;	
+		}
+		if((context2D===undefined || context2D===null)){
+			console.error("Scrollbar: could not find context. Draw Method may not work.");
+		}
+		
+	}
+	this.context=context2D;
+	this.sideways=sideways;
+	this.draw=function(x,y,width,height,bgFuction,barFunction){
+		this.context.fillStyle="grey";
+		if(bgFuction===undefined || bgFuction===null)
+			this.context.fillRect(x,y,this.sideways?height:width,this.sideways?width:height);
+		else{
+			if(typeof bgFuction=="function")
+				bgFuction(x,y,this.sideways?height:width,this.sideways?width:height);
+		}
+
+		this.context.fillStyle="black";
+		if(this.maxHeight<this.screenHeight){
+			if(barFunction===undefined || barFunction===null)
+			this.context.fillRect(x,y,this.sideways?1*height:width,this.sideways?width:1*height);
+			else{
+				if(typeof barFunction=="function")
+					barFunction(x,y,this.sideways?height:width,this.sideways?width:height);
+			}
+		} else {
+			if(barFunction===undefined || barFunction===null)
+			this.context.fillRect(this.sideways?(x+(height*this.scrollbarOffset)):x,this.sideways?y:y+(height*this.scrollbarOffset),this.sideways?this.scrollbarHeight*height:width,this.sideways?width:this.scrollbarHeight*height);
+			else{
+				if(typeof barFunction=="function")
+					barFunction(x,y,this.sideways?height:width,this.sideways?width:height);
+			}
+		}
+	}
+	this.update=function(top,maxHeight,screenHeight){
+		if(screenHeight!==undefined && screenHeight!==null)
+			this.screenHeight=screenHeight;
+		if(maxHeight!==undefined && maxHeight!==null)
+			this.maxHeight=maxHeight;
+		if(top!==undefined && top!==null){
+			if(top<0)
+				this.top=0;
+			else if(!(top>(this.maxHeight-this.screenHeight)))
+				this.top=top;
+			else 
+				this.top=this.maxHeight-this.screenHeight
+		}
+		this.scrollbarHeight=this.screenHeight/this.maxHeight;
+		this.scrollbarOffset=this.top/this.maxHeight
+	}
+	this.getOffset=function(){
+		return (-1*this.scrollbarOffset*this.maxHeight);
+	}
+
+	this.scroll=function(mouseX,mouseY,clicked,x,y,width,height){
+		var xbar=this.sideways?(x+(height*this.scrollbarOffset)):x;
+		var ybar=this.sideways?y:y+(height*this.scrollbarOffset);
+		var wbar=this.sideways?this.scrollbarHeight*height:width;
+		var hbar=this.sideways?width:this.scrollbarHeight*height;
+		var bgbarW=this.sideways?height:width
+		var bgbarH=this.sideways?width:height
+		if(clicked){
+			if(collision(mouseX,mouseY,1,1,xbar,ybar,wbar,hbar)){
+				this.dragging=true;	
+			} else if (collision(mouseX,mouseY,1,1,x,y,((this.sideways?this.scrollbarOffset:1)*bgbarW),(this.sideways?1:this.scrollbarOffset)*bgbarH)){
+				this.update(this.top - 2);
+				this.lastTop=this.top;
+				this.lastX=mouseX;
+				this.lastY=mouseY;
+			} else if (collision(mouseX,mouseY,1,1,x,y,bgbarW,bgbarH)){
+				this.update(this.top + 2);
+				this.lastTop=this.top;
+				this.lastX=mouseX;
+				this.lastY=mouseY;
+			}
+			if(this.dragging && !(this.maxHeight<this.screenHeight)){
+				var dist=this.sideways?this.lastX-mouseX:this.lastY-mouseY;
+				if(this.lastX>-1 && this.lastY>-1)
+				this.update(this.lastTop+(((dist)/height)*(-1)*this.maxHeight));
+			}
+		} else {
+			this.dragging=false;
+			if(collision(mouseX,mouseY,1,1,xbar,ybar,wbar,hbar)){
+				this.lastX=mouseX;
+				this.lastY=mouseY;
+				this.lastTop=this.top;
+			}
+		}
+	}
+	
+	var collision=function (rect1x, rect1y, rect1w, rect1h, rect2x, rect2y, rect2w, rect2h){
+		return rect1x+rect1w > rect2x && rect1x < (rect2x + rect2w) && rect1y+rect1h > rect2y && rect1y < (rect2y + rect2h);
+	}
 }

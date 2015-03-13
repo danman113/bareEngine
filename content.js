@@ -52,6 +52,7 @@ function init(){
 									],1)
 				];
 	engine.updateSceneInfo(engine);
+	engine.addScrollbar(0,500,300,null);
 }
 
 function bar(x,y,w,h,u1,u2,color,bgcolor){
@@ -100,6 +101,8 @@ function draw(){
 			c.drawImage(engine.images[3],miku.x,miku.y,miku.w,miku.h);
 			
 			drawLeeks();
+			engine.scrollbars[0].scroll(engine.mouse.x,engine.mouse.y,!engine.mouse.up,0,0,10,300)
+			engine.scrollbars[0].draw(0,0,10,300);
 			
 		break;
 		case 1:
