@@ -9,7 +9,7 @@ var globalBare={
 }
 function bareEngine(width,height){
 	//Engine information
-	this.version=0.8;
+	this.version=0.85;
 	//Options
 	this.masterVolume=0.5;
 	this.soundVolume=1;
@@ -17,6 +17,7 @@ function bareEngine(width,height){
 	this.fontsize=10;
 	this.font="arial";
 	this.rightClick=false;
+	this.preventKeyDefaults=true;
 	//Canvas
 	this.width=width;
 	this.height=height;
@@ -60,7 +61,8 @@ function bareEngine(width,height){
 			document.addEventListener('contextmenu', this.onRightClick, false);
 		window.addEventListener("keydown", this.onKeyDown, false);
 		window.addEventListener("keyup", this.onKeyUp, false);
-		window.addEventListener("keydown", this.prevent, false);
+		if(this.preventKeyDefaults)
+			window.addEventListener("keydown", this.prevent, false);
 		//Initializing the draw loop
 		if(typeof disp == "function")
 			this.displayLoop=window.requestAnimationFrame(disp);
@@ -77,20 +79,20 @@ function bareEngine(width,height){
 	this.mouseUp=function(e){
 		globalBare.mouse.up=true;
 		if(typeof onMouseUp=="function")
-			onMouseUp();
+			onMouseUp(e);
 		this.keys=new Object();
 	}
 
 	this.mouseDown=function(e){
 		globalBare.mouse.up=false;
 		if(typeof onMouseDown=="function")
-			onMouseDown();
+			onMouseDown(e);
 
 	}
 
 	this.onRightClick=function(e){
 		if(typeof onRightClick=="function")
-			onRightClick();
+			onRightClick(e);
 		e.preventDefault();
 	}
 
@@ -108,7 +110,7 @@ function bareEngine(width,height){
 	this.mouseOut=function(e){
 		globalBare.mouse.up=true;
 		if(typeof onMouseOut=="function")
-			onMouseOut();
+			onMouseOut(e);
 	}
 
 	this.onKeyDown=function(e){
@@ -340,18 +342,20 @@ function rectButton(x,y,width,height,onClick,label,drawFunction,onHover){
 	this.label=label;
 	this.buttonColors=["#2E9AFE","#084B8A","white","black"];
 	this.engine;
+	this.offsetX=0;
+	this.offsetY=0;
 	if(drawFunction===undefined || drawFunction===null){
 		drawFunction=function(){
 			this.engine.context.fillStyle=this.buttonColors[0];
-			this.engine.context.fillRect(this.x,this.y,this.width,this.height);
+			this.engine.context.fillRect(this.x+this.offsetX,this.y+this.offsetY,this.width,this.height);
 			this.engine.context.fillStyle=this.buttonColors[1];
-			this.engine.context.fillRect(this.x,this.y+this.height-this.height/5,this.width,this.height/5);	
+			this.engine.context.fillRect(this.x+this.offsetX,this.y+this.offsetY+this.height-this.height/5,this.width,this.height/5);	
 			if(!(this.label===undefined)){
 				this.buttonColors[2]===undefined?this.buttonColors[2]="white":this.buttonColors[2]=this.buttonColors[2];
 				this.buttonColors[3]===undefined?this.buttonColors[3]="black":this.buttonColors[3]=this.buttonColors[3];
 				this.engine.context.fillStyle=this.buttonColors[2];
 				this.engine.context.font=this.height/2+"px "+this.engine.font;
-				this.engine.context.fillText(this.label,this.x+(this.width-this.engine.context.measureText(this.label).width)/2,this.y+(this.height*2/3));	
+				this.engine.context.fillText(this.label,this.x+(this.width-this.engine.context.measureText(this.label).width)/2+this.offsetX,this.y+this.offsetY+(this.height*2/3));	
 				this.engine.context.font=this.engine.fontsize+"px "+this.engine.font;
 			}
 		}
@@ -360,15 +364,15 @@ function rectButton(x,y,width,height,onClick,label,drawFunction,onHover){
 	if(onHover===undefined || onHover===null){
 		onHover=function(){
 			this.engine.context.fillStyle=this.buttonColors[1];
-			this.engine.context.fillRect(this.x,this.y,this.width,this.height);
+			this.engine.context.fillRect(this.x+this.offsetX,this.y+this.offsetY,this.width,this.height);
 			if(!(this.label===undefined)){
 				this.buttonColors[2]===undefined?this.buttonColors[2]="white":this.buttonColors[2]=this.buttonColors[2];
 				this.buttonColors[3]===undefined?this.buttonColors[3]="black":this.buttonColors[3]=this.buttonColors[3];
 				this.engine.context.fillStyle=this.buttonColors[3];
 				this.engine.context.font=this.height/2+"px "+this.engine.font;
-				this.engine.context.fillText(this.label,this.x+2+(this.width-this.engine.context.measureText(this.label).width)/2,this.y+2+(this.height*2/3));	
+				this.engine.context.fillText(this.label,this.x+this.offsetX+2+(this.width-this.engine.context.measureText(this.label).width)/2,this.y+2+(this.height*2/3)+this.offsetY);	
 				this.engine.context.fillStyle=this.buttonColors[2];
-				this.engine.context.fillText(this.label,this.x+(this.width-this.engine.context.measureText(this.label).width)/2,this.y+(this.height*2/3));	
+				this.engine.context.fillText(this.label,this.x+this.offsetX+(this.width-this.engine.context.measureText(this.label).width)/2,this.y+(this.height*2/3)+this.offsetY);	
 				this.engine.context.font=this.engine.fontsize+"px "+this.engine.font;
 			}
 		}
@@ -383,7 +387,7 @@ function rectButton(x,y,width,height,onClick,label,drawFunction,onHover){
 
 
 	this.drawButton=function(x,y,w,h){
-		if(x+w > this.x && x < (this.x + this.width) && y+h > this.y && y < (this.y + this.height)){
+		if(x+w > this.x+this.offsetX && x < (this.x + this.width)+this.offsetX && y+h > this.y+this.offsetY && y < (this.y + this.height)+this.offsetY){
 			this.onHover();
 		} else {
 			this.drawFunction();
@@ -411,7 +415,7 @@ function bareScene(sceneNumber,buttons,parent){
 
 	this.handleClicks=function(x,y,w,h,Clicked){
 		for(var i=this.buttons.length-1;i>-1;i--){
-			if(x+w > this.buttons[i].x && x < (this.buttons[i].x + this.buttons[i].width) && y+h > this.buttons[i].y && y < (this.buttons[i].y + this.buttons[i].height) && Clicked){
+			if(x+w > (this.buttons[i].x + this.buttons[i].offsetX) && x < ((this.buttons[i].x + this.buttons[i].width) + this.buttons[i].offsetX) && y+h > this.buttons[i].y + this.buttons[i].offsetY && y < (this.buttons[i].y + this.buttons[i].height) + this.buttons[i].offsetY && Clicked){
 				engine.scenes[engine.currentScene].buttons[i].onClick();
 				return true;
 			}
@@ -481,7 +485,7 @@ function bareScrollbar(top,maxHeight,screenHeight,sideways,context2D){
 			this.context.fillRect(this.sideways?(x+(height*this.scrollbarOffset)):x,this.sideways?y:y+(height*this.scrollbarOffset),this.sideways?this.scrollbarHeight*height:width,this.sideways?width:this.scrollbarHeight*height);
 			else{
 				if(typeof barFunction=="function")
-					barFunction(x,y,this.sideways?height:width,this.sideways?width:height);
+					barFunction(this.sideways?(x+(height*this.scrollbarOffset)):x,this.sideways?y:y+(height*this.scrollbarOffset),this.sideways?this.scrollbarHeight*height:width,this.sideways?width:this.scrollbarHeight*height);
 			}
 		}
 	}
