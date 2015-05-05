@@ -4,9 +4,11 @@ Touch emulation
 Better onkeyup stuff
 */
 
+//Used to get values through events
 var globalBare={
 	imagesLoaded:0,audioLoaded:0,mouse:{x:0,y:0,up:true,hover:-1,mouseUp:false,mouseDown:false},keys:new Object,lastKey:0
 }
+//Datatype that does the bulk of the work. Should only be one per application
 function bareEngine(width,height){
 	//Engine information
 	this.version=0.85;
@@ -43,11 +45,21 @@ function bareEngine(width,height){
 	this.scrollbars=[];
 	//Misc
 	this.errorMessage="bareEngine error: ";
-
-	this.init=function(target){
-		//Creating the canvas
+	//Creates Canvas inside desired target
+	var createCanvas=function(target){
 		this.target=target;
 		this.target.innerHTML+="<canvas id='canvas' width='"+width+"' height='"+height+"'></canvas>";
+	}
+	this.init=function(target,create){
+		//Creating the canvas
+		if(target===undefined || target===null)
+			target=document.body;
+		
+		if(create===undefined || create===null)
+			create=true;
+		
+		if(create)
+			createCanvas(target);
 		this.canvas=document.getElementById("canvas");
 		this.context=canvas.getContext("2d");
 		globalBare.canvas=this.canvas;
@@ -105,6 +117,8 @@ function bareEngine(width,height){
 			globalBare.mouse.x = e.layerX-box.left;
 			globalBare.mouse.y = e.layerY-box.top;
 		}
+		if(typeof onMouseMove=="function")
+			onMouseMove(e);
 	}
 
 	this.mouseOut=function(e){
@@ -119,6 +133,7 @@ function bareEngine(width,height){
 		if(typeof onKeyDown=="function")
 			onKeyDown(e);
 	}
+	//prevents default keycode functions
 	this.prevent=function(e){
 		var keys=[];
 		for(var i=0;i<globalBare.keybindings.length;i++){
@@ -143,7 +158,7 @@ function bareEngine(width,height){
 		}
 		return -1;
 	}
-
+	//Finds a key by it's label and rebinds it, switching values if it already has one
 	this.rebind=function(label,primary,secondary){
 		var k=this.findKey(label);
 		if(k>=0){
@@ -296,10 +311,13 @@ function bareEngine(width,height){
 	}
 }
 
+//Audio datatype. Contains elements to be used play and load audio
 function audioFile(src,defaultVolume){
 	this.src=src;
 	this.element;
 	this.child;
+	//Plays sound. If it needs to create multiple sounds, it creates
+	//another child and plays that.
 	this.play=function(volume,multiple){
 		if(volume!==undefined && this.element.volume!=volume)
 			this.element.volume=volume;
@@ -321,9 +339,8 @@ function audioFile(src,defaultVolume){
 		} else {
 			this.element.play();
 		}
-		
-		
 	}
+
 	this.stop=function(){
 		this.element.pause();
 		try{
@@ -333,7 +350,7 @@ function audioFile(src,defaultVolume){
 		}
 	}
 }
-
+//Default datatype defining and manageing GUI buttons
 function rectButton(x,y,width,height,onClick,label,drawFunction,onHover){
 	this.x=x;
 	this.y=y;
@@ -344,6 +361,8 @@ function rectButton(x,y,width,height,onClick,label,drawFunction,onHover){
 	this.engine;
 	this.offsetX=0;
 	this.offsetY=0;
+
+	//drawfunction to be drawn onto the screen every frame
 	if(drawFunction===undefined || drawFunction===null){
 		drawFunction=function(){
 			this.engine.context.fillStyle=this.buttonColors[0];
@@ -361,6 +380,8 @@ function rectButton(x,y,width,height,onClick,label,drawFunction,onHover){
 		}
 	}
 	this.drawFunction=drawFunction;
+
+	//called when mouse is hovering over button
 	if(onHover===undefined || onHover===null){
 		onHover=function(){
 			this.engine.context.fillStyle=this.buttonColors[1];
@@ -378,6 +399,8 @@ function rectButton(x,y,width,height,onClick,label,drawFunction,onHover){
 		}
 	}
 	this.onHover=onHover;
+
+	//called when clicked
 	if(onClick===undefined || onClick===null){
 		onClick=function(){
 			console.log("Button Clicked");
@@ -385,7 +408,7 @@ function rectButton(x,y,width,height,onClick,label,drawFunction,onHover){
 	}
 	this.onClick=onClick;
 
-
+	//draws the button depending on its state
 	this.drawButton=function(x,y,w,h){
 		if(x+w > this.x+this.offsetX && x < (this.x + this.width)+this.offsetX && y+h > this.y+this.offsetY && y < (this.y + this.height)+this.offsetY){
 			this.onHover();
@@ -395,6 +418,7 @@ function rectButton(x,y,width,height,onClick,label,drawFunction,onHover){
 	}
 }
 
+//datatype that holds information about a the scene
 function bareScene(sceneNumber,buttons,parent){
 	this.number=sceneNumber;
 	this.engine;
@@ -423,13 +447,14 @@ function bareScene(sceneNumber,buttons,parent){
 	}
 }
 
+//simple key datatyle
 function bareKey(label,primary,secondary){
 	this.label=label;
 	this.primary=primary;
 	this.secondary=secondary;
 }
 
-
+//
 function bareScrollbar(top,maxHeight,screenHeight,sideways,context2D){
 	this.top=top;
 	this.maxHeight=maxHeight;
