@@ -7,9 +7,9 @@ Working music system
 Button Engine
 */
 var engine=new bareEngine(400,300);
-engine.imageUrls=["http://danman113.vacau.com/4041.jpg",
-				"http://danman113.vacau.com/4042.jpg",
-				"http://danman113.vacau.com/4040.jpg",
+engine.imageUrls=["http://neveronti.me/4041.jpg",
+				"http://neveronti.me/4042.jpg",
+				"http://neveronti.me/4040.jpg",
 				"http://fc08.deviantart.net/fs71/f/2010/017/a/d/Hatsune_Miku_Icon_by_KagamineStar.gif",
 				"http://www.mrsmacs.com.au/assets/main_ingredients/leek-af4d6dbef3b91aa7024c6b9215d768b9.png"
 				];
@@ -127,8 +127,9 @@ function update(){
 	engine.mouseManager();
 	switch(engine.currentScene){
 	case -1:
-		if(engine.imagesLoaded()+engine.audioLoaded()>=engine.totalImages+engine.totalAudio)
-				engine.currentScene=0;
+		if(engine.imagesLoaded()+engine.audioLoaded()>=engine.totalImages+engine.totalAudio){
+			engine.currentScene=0;
+		}
 	break;
 	case 0:
 		engine.audio[1].element.volume=soundDist(engine.scenes[0].buttons[0].x+engine.scenes[0].buttons[0].width/2,engine.scenes[0].buttons[0].y+engine.scenes[0].buttons[0].height/2);

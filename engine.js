@@ -3,7 +3,10 @@ Todo:
 Touch emulation
 Better onkeyup stuff
 */
-
+window.onerror = function(msg, url, linenumber) {
+    alert('Error message: '+msg+'\nURL: '+url+'\nLine Number: '+linenumber);
+    return true;
+}
 //Used to get values through events
 var globalBare={
 	imagesLoaded:0,audioLoaded:0,mouse:{x:0,y:0,up:true,hover:-1,mouseUp:false,mouseDown:false},keys:new Object,lastKey:0
@@ -203,6 +206,8 @@ function bareEngine(width,height){
 			this.audio[i].element.src=this.audio[i].src;
 			this.audio[i].element.volume=this.masterVolume;
 			this.audio[i].element.oncanplaythrough=this.onAudioLoad;
+			if(this.audio[i].element.load)
+				this.audio[i].element.load();
 			this.audio[i].element.play();
 			this.audio[i].element.pause();
 		}
